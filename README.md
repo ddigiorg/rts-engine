@@ -117,9 +117,9 @@ set(STB_INCLUDE_DIR "D:/_projects/rts-engine/3rdparty/stb/")
 
 Compile the project.
 
-``
+```
 sh build.sh
-``
+```
 
 Run the application.
 
