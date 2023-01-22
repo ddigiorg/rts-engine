@@ -118,6 +118,11 @@ set(STB_INCLUDE_DIR "D:/_projects/rts-engine/3rdparty/stb/")
 Compile the project.
 
 ``
-cd rts-engine
 sh build.sh
 ``
+
+Run the application.
+
+```
+sh run.sh
+```
