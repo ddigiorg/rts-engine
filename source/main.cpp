@@ -4,11 +4,12 @@
 #include "stb_image.h"
 
 #include "application.h"
-#include "camera.h" 2
+#include "camera.h"
 #include "chunk.h"
 #include "shader.h"
 
 #include <iostream>
+#include <cstdint>
 #include <vector>
 #include <string>
 
@@ -17,25 +18,26 @@
 // =============================================================================
 int main(int argc, char* argv[]) {
 
-    std::vector<int> chunkData = {
-        32, 32, 16, 32, 32, 16, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
-        32, 32, 16, 16, 32, 16, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
-        32, 00, 00, 16, 16, 16, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
-        00, 00, 00, 00, 16, 16, 32, 32, 32, 32, 00, 00, 00, 32, 32, 32, 
-        00, 00, 00, 00, 16, 16, 16, 32, 32, 00, 00, 00, 00, 00, 32, 32, 
-        00, 00, 00, 00, 16, 16, 16, 16, 00, 00, 00, 00, 00, 00, 32, 32, 
-        00, 00, 00, 32, 32, 16, 16, 16, 32, 32, 00, 00, 00, 00, 00, 32,
-        00, 00, 00, 32, 32, 32, 16, 16, 16, 32, 00, 00, 00, 00, 00, 32, 
-        00, 00, 00, 00, 32, 32, 32, 16, 16, 16, 00, 00, 00, 00, 00, 32, 
-        32, 00, 00, 00, 00, 32, 32, 32, 16, 16, 16, 32, 00, 00, 32, 32, 
-        32, 32, 32, 00, 00, 00, 32, 00, 00, 16, 16, 00, 00, 00, 32, 32, 
-        32, 32, 32, 32, 00, 00, 00, 00, 00, 16, 16, 00, 00, 00, 32, 32, 
-        32, 32, 32, 32, 00, 00, 00, 00, 00, 16, 16, 00, 00, 00, 00, 00, 
-        32, 32, 00, 00, 00, 00, 00, 00, 16, 16, 16, 00, 00, 00, 00, 00, 
-        32, 32, 32, 00, 00, 00, 32, 32, 16, 16, 32, 32, 32, 00, 00, 00, 
-        32, 32, 32, 32, 00, 00, 32, 16, 16, 16, 32, 32, 32, 32, 00, 00, 
+    std::vector<std::uint8_t> chunkData = {
+        2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 1, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        2, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        0, 0, 0, 0, 1, 1, 2, 2, 2, 2, 0, 0, 0, 2, 2, 2, 
+        0, 0, 0, 0, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 2, 2, 
+        0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 
+        0, 0, 0, 2, 2, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 2,
+        0, 0, 0, 2, 2, 2, 1, 1, 1, 2, 0, 0, 0, 0, 0, 2, 
+        0, 0, 0, 0, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 2, 
+        2, 0, 0, 0, 0, 2, 2, 2, 1, 1, 1, 2, 0, 0, 2, 2, 
+        2, 2, 2, 0, 0, 0, 2, 0, 1, 1, 1, 0, 0, 0, 2, 2, 
+        2, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 2, 2, 
+        2, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 
+        2, 2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 
+        2, 2, 2, 0, 0, 0, 2, 2, 1, 1, 2, 2, 2, 0, 0, 0, 
+        2, 2, 2, 2, 0, 0, 2, 1, 1, 1, 2, 2, 2, 2, 0, 0, 
     };
 
+    // TODO: THINK THROUGH THIS
     stbi_set_flip_vertically_on_load(true);
 
     // setup application
@@ -46,10 +48,11 @@ int main(int argc, char* argv[]) {
     camera.initOrthographic();
     camera.initView();
 
+    // TODO: PUT THIS IN A CLASS
     // setup texture atlas
     GLuint textureId = 0;
     int tX, tY, tC;
-    GLubyte* pixels = stbi_load("D:/_projects/rts-engine/resources/images/terrain32.png", &tX, &tY, &tC, 0);
+    GLubyte* pixels = stbi_load("D:/_projects/rts-engine/resources/images/terrain16.png", &tX, &tY, &tC, 0);
     glGenTextures(1, &textureId);
     glBindTexture(GL_TEXTURE_2D, textureId);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -98,8 +101,6 @@ int main(int argc, char* argv[]) {
             //int cameraChunkX = int(((camera.x + 256) / 512) + (int(camera.x) >> 31));
             //int cameraChunkY = int(((camera.y + 256) / 512) + (int(camera.y) >> 31));
             //std::cout << cameraChunkX << ", " << cameraChunkY << std::endl;
-
-
         }
 
         // draw
