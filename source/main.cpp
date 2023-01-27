@@ -6,7 +6,6 @@
 #include "application.h"
 #include "camera.h"
 #include "chunk.h"
-#include "shader.h"
 
 #include <iostream>
 #include <cstdint>
@@ -18,34 +17,31 @@
 // =============================================================================
 int main(int argc, char* argv[]) {
 
-    std::vector<std::uint8_t> chunkData = {
-        2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 1, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        0, 0, 0, 0, 1, 1, 2, 2, 2, 2, 0, 0, 0, 2, 2, 2, 
-        0, 0, 0, 0, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 2, 2, 
-        0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 
-        0, 0, 0, 2, 2, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 2,
-        0, 0, 0, 2, 2, 2, 1, 1, 1, 2, 0, 0, 0, 0, 0, 2, 
-        0, 0, 0, 0, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 2, 
-        2, 0, 0, 0, 0, 2, 2, 2, 1, 1, 1, 2, 0, 0, 2, 2, 
-        2, 2, 2, 0, 0, 0, 2, 0, 1, 1, 1, 0, 0, 0, 2, 2, 
-        2, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 2, 2, 
-        2, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 
-        2, 2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 
-        2, 2, 2, 0, 0, 0, 2, 2, 1, 1, 2, 2, 2, 0, 0, 0, 
-        2, 2, 2, 2, 0, 0, 2, 1, 1, 1, 2, 2, 2, 2, 0, 0, 
+    TileArray2D data = {
+        {2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {2, 2, 1, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {2, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {0, 0, 0, 0, 1, 1, 2, 2, 2, 2, 0, 0, 0, 2, 2, 2},
+        {0, 0, 0, 0, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 2, 2},
+        {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2},
+        {0, 0, 0, 2, 2, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 2},
+        {0, 0, 0, 2, 2, 2, 1, 1, 1, 2, 0, 0, 0, 0, 0, 2},
+        {0, 0, 0, 0, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 2},
+        {2, 0, 0, 0, 0, 2, 2, 2, 1, 1, 1, 2, 0, 0, 2, 2},
+        {2, 2, 2, 0, 0, 0, 2, 0, 1, 1, 1, 0, 0, 0, 2, 2},
+        {2, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 2, 2},
+        {2, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+        {2, 2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+        {2, 2, 2, 0, 0, 0, 2, 2, 1, 1, 2, 2, 2, 0, 0, 0},
+        {2, 2, 2, 2, 0, 0, 2, 1, 1, 1, 2, 2, 2, 2, 0, 0},
     };
-
-    // TODO: THINK THROUGH THIS
-    stbi_set_flip_vertically_on_load(true);
 
     // setup application
     Application app;
 
     // setup camera
-    Camera camera(app.screenX, app.screenY);
-    camera.initOrthographic();
+    Camera camera;
+    camera.initOrthographic(app.screenX, app.screenY);
     camera.initView();
 
     // TODO: PUT THIS IN A CLASS
@@ -61,9 +57,9 @@ int main(int argc, char* argv[]) {
 
     // setup tiles
     Chunk chunk;
-    chunk.loadData(chunkData);
-    chunk.setVertexXY(0, 0);
-    chunk.setVertexUV();
+    //chunk.loadData(data);
+    chunk.updatePosition(0, 0);
+    chunk.updateTiles();
     chunk.bufferData();
 
     // std::vector<Chunk> chunks(9);
@@ -76,16 +72,15 @@ int main(int argc, char* argv[]) {
     //     chunks[i].bufferData();
     // }
 
-    // setup shaders
-    std::string vsFilename = "D:/_projects/rts-engine/resources/shaders/chunk_vert.glsl";
-    std::string fsFilename = "D:/_projects/rts-engine/resources/shaders/chunk_frag.glsl";
-    Shader shader(vsFilename, fsFilename);
-
     // main loop
     while(app.isRunning) {
 
         // handle input events
         app.handleInputEvents();
+
+        // int x = app.mouseX - (app.screenX / 2) + camera.x;
+        // int y = (app.screenY - app.mouseY) - (app.screenY / 2) + camera.y;
+        // std::cout << x << ", " << y << std::endl;
 
         // update objects
         if(app.cameraVelX != 0 || app.cameraVelY != 0) {
@@ -105,16 +100,11 @@ int main(int argc, char* argv[]) {
 
         // draw
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        glUseProgram(shader.program);
-        GLint projLocation = glGetUniformLocation(shader.program, "projection");
-        glUniformMatrix4fv(projLocation, 1, GL_FALSE, &camera.projVec[0]);
-        GLint viewLocation = glGetUniformLocation(shader.program, "view");
-        glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &camera.viewVec[0]);
-        chunk.render();
+        chunk.render(camera);
         // for(int i = 0; i < 9; i++) {
         //     chunks[i].render();
         // }
-        glUseProgram(0);
+
 
         // update screen
         SDL_GL_SwapWindow(app.window);

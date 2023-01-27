@@ -6,18 +6,18 @@
 
 #include <vector>
 
-#define INIT_POS_X 0.0f
-#define INIT_POS_Y 0.0f
-#define INIT_POS_Z 0.0f
+#define CAMERA_ORIGIN_X 0.0f
+#define CAMERA_ORIGIN_Y 0.0f
+#define CAMERA_ORIGIN_Z 0.0f
 
 // =============================================================================
 // Camera Class
 // =============================================================================
 class Camera {
     public:
-        Camera(int screenX, int screenY);
-        void initOrthographic();
-        void initPerspective();
+        Camera();
+        void initOrthographic(int screenX, int screenY);
+        void initPerspective(int screenX, int screenY);
         void initView();
         void moveView(float x, float y);
         void moveView(float x, float y, float z);
@@ -35,12 +35,10 @@ class Camera {
 // =============================================================================
 // Construct Camera
 // =============================================================================
-Camera::Camera(int screenX, int screenY) {
-    this->screenX = screenX;
-    this->screenY = screenY;
-    x = INIT_POS_X;
-    y = INIT_POS_Y;
-    z = INIT_POS_Z;
+Camera::Camera() {
+    x = CAMERA_ORIGIN_X;
+    y = CAMERA_ORIGIN_Y;
+    z = CAMERA_ORIGIN_Z;
 
     projVec.resize(16);
     viewVec.resize(16);
@@ -49,11 +47,11 @@ Camera::Camera(int screenX, int screenY) {
 // =============================================================================
 // Initialize Orthographic Projection Matrix
 // =============================================================================
-void Camera::initOrthographic() {
+void Camera::initOrthographic(int screenX, int screenY) {
     GLfloat l = -screenX / 2.0f;
     GLfloat r =  screenX / 2.0f;
-    GLfloat b = -screenY / 2.0f;
-    GLfloat t =  screenY / 2.0f;
+    GLfloat b =  screenY / 2.0f;
+    GLfloat t = -screenY / 2.0f;
     GLfloat n = -1.0f;
     GLfloat f =  1.0f;
 
@@ -78,11 +76,11 @@ void Camera::initOrthographic() {
 // =============================================================================
 // Initialize Perspective Projection Matrix
 // =============================================================================
-void Camera::initPerspective() {
+void Camera::initPerspective(int screenX, int screenY) {
     GLfloat l = -screenX / 2.0f;
     GLfloat r =  screenX / 2.0f;
-    GLfloat b = -screenY / 2.0f;
-    GLfloat t =  screenY / 2.0f;
+    GLfloat b =  screenY / 2.0f;
+    GLfloat t = -screenY / 2.0f;
     GLfloat n = 1.0f;
     GLfloat f = 10.0f;
 
@@ -120,9 +118,9 @@ void Camera::initView() {
     viewVec[9] = 0.0f;
     viewVec[10] = 1.0f; // scale z
     viewVec[11] = 0.0f;
-    viewVec[12] = INIT_POS_X; // x
-    viewVec[13] = INIT_POS_Y; // y
-    viewVec[14] = INIT_POS_Z; // z
+    viewVec[12] = CAMERA_ORIGIN_X; // x
+    viewVec[13] = CAMERA_ORIGIN_Y; // y
+    viewVec[14] = CAMERA_ORIGIN_Z; // z
     viewVec[15] = 1.0f;
 }
 

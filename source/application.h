@@ -24,6 +24,8 @@ class Application {
         float cameraVelY;
         SDL_Window* window = nullptr;
         SDL_GLContext context = nullptr;
+        int mouseX;
+        int mouseY;
 };
 
 // =============================================================================
@@ -35,6 +37,8 @@ Application::Application() {
     screenY = 600;
     cameraVelX = 0.0f;
     cameraVelY = 0.0f;
+    mouseX = 0;
+    mouseY = 0;
 
     // setup SDL
     if(SDL_Init(SDL_INIT_VIDEO < 0)) {
@@ -117,10 +121,7 @@ void Application::handleInputEvents() {
 
         // handle mouse down event
         if(event.type == SDL_MOUSEBUTTONDOWN) {
-            int x = 0;
-            int y = 0;
-            SDL_GetMouseState(&x, &y);
-            std::cout << x << ", " << y << std::endl;
+            SDL_GetMouseState(&mouseX, &mouseY);
         }
 
         // handle key down event
@@ -131,11 +132,11 @@ void Application::handleInputEvents() {
                     break;
                 }
                 case SDLK_UP: {
-                    cameraVelY = 8.0f;
+                    cameraVelY = -8.0f;
                     break;
                 }
                 case SDLK_DOWN: {
-                    cameraVelY = -8.0f;
+                    cameraVelY = 8.0f;
                     break;
                 }
                 case SDLK_LEFT: {
@@ -153,12 +154,12 @@ void Application::handleInputEvents() {
         if(event.type == SDL_KEYUP) {
             switch(event.key.keysym.sym){
                 case SDLK_UP: {
-                    if(cameraVelY > 0.0f)
+                    if(cameraVelY < 0.0f)
                         cameraVelY = 0.0f;
                     break;
                 }
                 case SDLK_DOWN: {
-                    if(cameraVelY < 0.0f)
+                    if(cameraVelY > 0.0f)
                         cameraVelY = 0.0f;
                     break;
                 }

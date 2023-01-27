@@ -14,8 +14,8 @@
 // =============================================================================
 class Shader {
     public:
-        Shader(std::string vsFilename, std::string fsFilename);
-        void loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename);
+        void init(std::string vsFilename, std::string fsFilename);
+        void _loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename);
 
     public:
         GLuint program;
@@ -24,25 +24,9 @@ class Shader {
 };
 
 // =============================================================================
-// Construct Shader
-// =============================================================================
-Shader::Shader(std::string vsFilename, std::string fsFilename) {
-
-    program = glCreateProgram();
-
-    loadGLSLFromFile(vertexShader, GL_VERTEX_SHADER, vsFilename);
-    loadGLSLFromFile(fragmentShader, GL_FRAGMENT_SHADER, fsFilename);
-
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
-    glValidateProgram(program);
-}
-
-// =============================================================================
 // Load GLSL From File
 // =============================================================================
-void Shader::loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename) {
+void Shader::_loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename) {
 
     // ensure shader type is correct
     std::string typeString = "";
@@ -90,6 +74,22 @@ void Shader::loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename)
         glDeleteShader(shader);
         exit(1);
     }
+}
+
+// =============================================================================
+// Construct Shader
+// =============================================================================
+void Shader::init(std::string vsFilename, std::string fsFilename) {
+
+    program = glCreateProgram();
+
+    _loadGLSLFromFile(vertexShader, GL_VERTEX_SHADER, vsFilename);
+    _loadGLSLFromFile(fragmentShader, GL_FRAGMENT_SHADER, fsFilename);
+
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
+    glLinkProgram(program);
+    glValidateProgram(program);
 }
 
 #endif // SHADER_H
