@@ -6,6 +6,8 @@
 #include "application.h"
 #include "camera.h"
 #include "chunk.h"
+#include "chunk_manager.h"
+#include "types.h"
 
 #include <iostream>
 #include <cstdint>
@@ -17,32 +19,13 @@
 // =============================================================================
 int main(int argc, char* argv[]) {
 
-    TileArray2D data = {
-        {2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-        {2, 2, 1, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-        {2, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-        {0, 0, 0, 0, 1, 1, 2, 2, 2, 2, 0, 0, 0, 2, 2, 2},
-        {0, 0, 0, 0, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 2, 2},
-        {0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2},
-        {0, 0, 0, 2, 2, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 2},
-        {0, 0, 0, 2, 2, 2, 1, 1, 1, 2, 0, 0, 0, 0, 0, 2},
-        {0, 0, 0, 0, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 2},
-        {2, 0, 0, 0, 0, 2, 2, 2, 1, 1, 1, 2, 0, 0, 2, 2},
-        {2, 2, 2, 0, 0, 0, 2, 0, 1, 1, 1, 0, 0, 0, 2, 2},
-        {2, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 2, 2},
-        {2, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
-        {2, 2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
-        {2, 2, 2, 0, 0, 0, 2, 2, 1, 1, 2, 2, 2, 0, 0, 0},
-        {2, 2, 2, 2, 0, 0, 2, 1, 1, 1, 2, 2, 2, 2, 0, 0},
-    };
-
     // setup application
     Application app;
 
     // setup camera
     Camera camera;
     camera.initOrthographic(app.screenX, app.screenY);
-    camera.initView();
+    camera.initView(0.0, 0.0, 0.0);
 
     // TODO: PUT THIS IN A CLASS
     // setup texture atlas
@@ -56,21 +39,7 @@ int main(int argc, char* argv[]) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tX, tY, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
     // setup tiles
-    Chunk chunk;
-    //chunk.loadData(data);
-    chunk.updatePosition(0, 0);
-    chunk.updateTiles();
-    chunk.bufferData();
-
-    // std::vector<Chunk> chunks(9);
-    // std::vector<int> chunkX = {-1,  0,  1, -1,  0,  1, -1,  0,  1};
-    // std::vector<int> chunkY = {-1, -1, -1,  0,  0,  0,  1,  1,  1};
-
-    // for(int i = 0; i < 9; i++) {
-    //     chunks[i].setVertexXY(chunkX[i], chunkY[i]);
-    //     chunks[i].setVertexUV();
-    //     chunks[i].bufferData();
-    // }
+    ChunkManager cm;
 
     // main loop
     while(app.isRunning) {
@@ -78,33 +47,20 @@ int main(int argc, char* argv[]) {
         // handle input events
         app.handleInputEvents();
 
-        // int x = app.mouseX - (app.screenX / 2) + camera.x;
-        // int y = (app.screenY - app.mouseY) - (app.screenY / 2) + camera.y;
-        // std::cout << x << ", " << y << std::endl;
-
         // update objects
         if(app.cameraVelX != 0 || app.cameraVelY != 0) {
             camera.moveView(
-                camera.x + app.cameraVelX,
-                camera.y + app.cameraVelY
+                camera.pos.x + app.cameraVelX,
+                camera.pos.y + app.cameraVelY
             );
 
-            // get camera position
-            //std::cout << "camera=(" << camera.x << ", " << camera.y << ")" << std::endl;
-
-            // get camera position in chunk coords
-            //int cameraChunkX = int(((camera.x + 256) / 512) + (int(camera.x) >> 31));
-            //int cameraChunkY = int(((camera.y + 256) / 512) + (int(camera.y) >> 31));
-            //std::cout << cameraChunkX << ", " << cameraChunkY << std::endl;
+            // update chunks
+            cm.update(camera.pos);
         }
 
         // draw
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        chunk.render(camera);
-        // for(int i = 0; i < 9; i++) {
-        //     chunks[i].render();
-        // }
-
+        cm.render(camera);
 
         // update screen
         SDL_GL_SwapWindow(app.window);

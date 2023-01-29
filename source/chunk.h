@@ -1,6 +1,7 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
+#include "types.h"
 #include "shader.h"
 #include "camera.h"
 
@@ -18,10 +19,12 @@
 #define TILE_VERTICIES 6
 #define TILE_BUFFER_SIZE (TILE_VERTICIES * VERTEX_SIZE)
 
-#define CHUNK_TILES_X 32
-#define CHUNK_TILES_Y 32
+#define CHUNK_TILES_X 16
+#define CHUNK_TILES_Y 16
 #define CHUNK_PIXELS_X (CHUNK_TILES_X * TILE_PIXELS_X)
 #define CHUNK_PIXELS_Y (CHUNK_TILES_Y * TILE_PIXELS_Y)
+#define CHUNK_PIXELS_HALF_X (CHUNK_PIXELS_X / 2)
+#define CHUNK_PIXELS_HALF_Y (CHUNK_PIXELS_Y / 2)
 #define CHUNK_BUFFER_SIZE (TILE_BUFFER_SIZE * CHUNK_TILES_X * CHUNK_TILES_X)
 
 #define ATLAS_COUNT_U 8
@@ -43,10 +46,14 @@ class Chunk {
         void updateTiles();
         void bufferData();
         void render(Camera& camera);
-    
+
+        vec2i_t getPosition() { return pos; };
+
     public:
-        int x;
-        int y;
+        bool active = false;
+    
+    private:
+        vec2i_t pos;
         GLuint vaoId = 0;
         GLuint vboId = 0;
         Shader shader;
@@ -60,17 +67,38 @@ class Chunk {
 // =============================================================================
 Chunk::Chunk() {
 
+    TileArray2D temp = {
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    };
+
     // reset tile data
     for (int y = 0; y < CHUNK_TILES_X; y++) {
         for (int x = 0; x < CHUNK_TILES_X; x++) {
-            data[y][x] = 0;
+            // data[y][x] = 0;
+            data[y][x] = temp[y][x];
         }
     }
 
+    // setup opengl objects
     glGenVertexArrays(1, &vaoId);
     glGenBuffers(1, &vboId);
 
-    // setup shaders
+    // setup opengl shaders
     shader.init(
         std::string("D:/_projects/rts-engine/resources/shaders/chunk_vert.glsl"),
         std::string("D:/_projects/rts-engine/resources/shaders/chunk_frag.glsl")
@@ -86,19 +114,19 @@ void Chunk::loadData(TileArray2D& tiles) {
             data[y][x] = tiles[y][x];
         }
     }
-
 }
 
 // =============================================================================
 // Update Chunk Position
 // =============================================================================
 void Chunk::updatePosition(int x, int y) {
-    this->x = x;
-    this->y = y;
+
+    pos.x = x;
+    pos.y = y;
 
     // calculate chunk position offsets
-    int cX = (x * CHUNK_PIXELS_X) - (CHUNK_PIXELS_X / 2);
-    int cY = (y * CHUNK_PIXELS_Y) - (CHUNK_PIXELS_Y / 2);
+    int cX = (x * CHUNK_PIXELS_X) - CHUNK_PIXELS_HALF_X;
+    int cY = (y * CHUNK_PIXELS_Y) - CHUNK_PIXELS_HALF_Y;
 
     // loop through each tile
     for (int y = 0; y < CHUNK_TILES_X; y++) {
@@ -164,6 +192,7 @@ void Chunk::updateTiles(){
 // Buffer Chunk Render Data
 // =============================================================================
 void Chunk::bufferData() {
+
     glBindVertexArray(vaoId);
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
     glBufferData(GL_ARRAY_BUFFER, CHUNK_BUFFER_SIZE * sizeof(GLfloat), &vertexArr, GL_STATIC_DRAW);
@@ -181,11 +210,12 @@ void Chunk::bufferData() {
 // Render Tiles
 // =============================================================================
 void Chunk::render(Camera& camera) {
+
     glUseProgram(shader.program);
     GLint projLocation = glGetUniformLocation(shader.program, "projection");
-    glUniformMatrix4fv(projLocation, 1, GL_FALSE, &camera.projVec[0]);
+    glUniformMatrix4fv(projLocation, 1, GL_FALSE, &camera.projMat.flat[0]);
     GLint viewLocation = glGetUniformLocation(shader.program, "view");
-    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &camera.viewVec[0]);
+    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &camera.viewMat.flat[0]);
     glBindVertexArray(vaoId);
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
     glDrawArrays(GL_TRIANGLES, 0, CHUNK_BUFFER_SIZE);

@@ -1,14 +1,12 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "types.h"
+
 #include <GL/glew.h>
 #include <SDL.h>
 
 #include <vector>
-
-#define CAMERA_ORIGIN_X 0.0f
-#define CAMERA_ORIGIN_Y 0.0f
-#define CAMERA_ORIGIN_Z 0.0f
 
 // =============================================================================
 // Camera Class
@@ -16,135 +14,148 @@
 class Camera {
     public:
         Camera();
-        void initOrthographic(int screenX, int screenY);
-        void initPerspective(int screenX, int screenY);
-        void initView();
+        void initOrthographic(int width, int height);
+        void initPerspective(int width, int height);
+        void initView(float x, float y, float z);
         void moveView(float x, float y);
         void moveView(float x, float y, float z);
 
     public:
-        int screenX;
-        int screenY;
-        float x;
-        float y;
-        float z;
-        std::vector<GLfloat> projVec;
-        std::vector<GLfloat> viewVec;
+        vec3f_t pos;
+        vec2i_t resolution;
+        mat4x4f_t projMat;
+        mat4x4f_t viewMat;
 };
 
 // =============================================================================
 // Construct Camera
 // =============================================================================
 Camera::Camera() {
-    x = CAMERA_ORIGIN_X;
-    y = CAMERA_ORIGIN_Y;
-    z = CAMERA_ORIGIN_Z;
 
-    projVec.resize(16);
-    viewVec.resize(16);
 }
 
 // =============================================================================
 // Initialize Orthographic Projection Matrix
 // =============================================================================
-void Camera::initOrthographic(int screenX, int screenY) {
-    GLfloat l = -screenX / 2.0f;
-    GLfloat r =  screenX / 2.0f;
-    GLfloat b =  screenY / 2.0f;
-    GLfloat t = -screenY / 2.0f;
+void Camera::initOrthographic(int width, int height) {
+
+    resolution.x = width;
+    resolution.y = height;
+
+    GLfloat halfX = GLfloat(width / 2);
+    GLfloat halfY = GLfloat(height / 2);
+
+    GLfloat l = -halfX;
+    GLfloat r =  halfX;
+    GLfloat b =  halfY;
+    GLfloat t = -halfY;
     GLfloat n = -1.0f;
     GLfloat f =  1.0f;
 
-    projVec[0] = 2.0f / (r - l);
-    projVec[1] = 0.0f;
-    projVec[2] = 0.0f;
-    projVec[3] = 0.0f;
-    projVec[4] = 0.0f;
-    projVec[5] = 2.0f / (t - b);
-    projVec[6] = 0.0f;
-    projVec[7] = 0.0f;
-    projVec[8] = 0.0f;
-    projVec[9] = 0.0f;
-    projVec[10] = -2.0f / (f - n);
-    projVec[11] = 0.0f;
-    projVec[12] = -(r + l) / (r - l);
-    projVec[13] = -(t + b) / (t - b);
-    projVec[14] = -(f + n) / (f - n);
-    projVec[15] = 1.0f;
+    projMat.m00 = 2.0f / (r - l);
+    projMat.m01 = 0.0f;
+    projMat.m02 = 0.0f;
+    projMat.m03 = 0.0f;
+    projMat.m10 = 0.0f;
+    projMat.m11 = 2.0f / (t - b);
+    projMat.m12 = 0.0f;
+    projMat.m13 = 0.0f;
+    projMat.m20 = 0.0f;
+    projMat.m21 = 0.0f;
+    projMat.m22 = -2.0f / (f - n);
+    projMat.m23 = 0.0f;
+    projMat.m30 = -(r + l) / (r - l);
+    projMat.m31 = -(t + b) / (t - b);
+    projMat.m32 = -(f + n) / (f - n);
+    projMat.m33 = 1.0f;
 }
 
 // =============================================================================
 // Initialize Perspective Projection Matrix
 // =============================================================================
-void Camera::initPerspective(int screenX, int screenY) {
-    GLfloat l = -screenX / 2.0f;
-    GLfloat r =  screenX / 2.0f;
-    GLfloat b =  screenY / 2.0f;
-    GLfloat t = -screenY / 2.0f;
+void Camera::initPerspective(int width, int height) {
+
+    resolution.x = width;
+    resolution.y = height;
+
+    GLfloat halfX = GLfloat(width / 2);
+    GLfloat halfY = GLfloat(height / 2);
+
+    GLfloat l = -halfX;
+    GLfloat r =  halfX;
+    GLfloat b =  halfY;
+    GLfloat t = -halfY;
     GLfloat n = 1.0f;
     GLfloat f = 10.0f;
 
-    projVec[0] = 2.0f * n / (r - l);
-    projVec[1] = 0.0f;
-    projVec[2] = 0.0f;
-    projVec[3] = 0.0f;
-    projVec[4] = 0.0f;
-    projVec[5] = 2.0f * n / (t - b);
-    projVec[6] = 0.0f;
-    projVec[7] = 0.0f;
-    projVec[8] = (r + l) / (r - l);
-    projVec[9] = (t + b) / (t - b);
-    projVec[10] = -(f + n) / (f - n);
-    projVec[11] = -1.0f;
-    projVec[12] = 0.0f;
-    projVec[13] = 0.0f;
-    projVec[14] = -(2 * f * n) / (f - n);
-    projVec[15] = 0.0f;
+    projMat.m00 = 2.0f * n / (r - l);
+    projMat.m01 = 0.0f;
+    projMat.m02 = 0.0f;
+    projMat.m03 = 0.0f;
+    projMat.m10 = 0.0f;
+    projMat.m11 = 2.0f * n / (t - b);
+    projMat.m12 = 0.0f;
+    projMat.m13 = 0.0f;
+    projMat.m20 = (r + l) / (r - l);
+    projMat.m21 = (t + b) / (t - b);
+    projMat.m22 = -(f + n) / (f - n);
+    projMat.m23 = -1.0f;
+    projMat.m30 = 0.0f;
+    projMat.m31 = 0.0f;
+    projMat.m32 = -(2 * f * n) / (f - n);
+    projMat.m33 = 0.0f;
 }
 
 // =============================================================================
 // Initialize View Matrix
 // =============================================================================
-void Camera::initView() {
-    viewVec[0] = 1.0f; // scale x
-    viewVec[1] = 0.0f;
-    viewVec[2] = 0.0f;
-    viewVec[3] = 0.0f;
-    viewVec[4] = 0.0f;
-    viewVec[5] = 1.0f; // scale y
-    viewVec[6] = 0.0f;
-    viewVec[7] = 0.0f;
-    viewVec[8] = 0.0f;
-    viewVec[9] = 0.0f;
-    viewVec[10] = 1.0f; // scale z
-    viewVec[11] = 0.0f;
-    viewVec[12] = CAMERA_ORIGIN_X; // x
-    viewVec[13] = CAMERA_ORIGIN_Y; // y
-    viewVec[14] = CAMERA_ORIGIN_Z; // z
-    viewVec[15] = 1.0f;
+void Camera::initView(float x, float y, float z) {
+
+    pos.x = x;
+    pos.y = y;
+    pos.z = z;
+
+    viewMat.m00 = 1.0f; // scale x
+    viewMat.m01 = 0.0f;
+    viewMat.m02 = 0.0f;
+    viewMat.m03 = 0.0f;
+    viewMat.m10 = 0.0f;
+    viewMat.m11 = 1.0f; // scale y
+    viewMat.m12 = 0.0f;
+    viewMat.m13 = 0.0f;
+    viewMat.m20 = 0.0f;
+    viewMat.m21 = 0.0f;
+    viewMat.m22 = 1.0f; // scale z
+    viewMat.m23 = 0.0f;
+    viewMat.m30 = x; // x
+    viewMat.m31 = y; // y
+    viewMat.m32 = z; // z
+    viewMat.m33 = 1.0f;
 }
 
 // =============================================================================
 // Update View Matrix
 // =============================================================================
 void Camera::moveView(float x, float y) {
-    this->x = x;
-    this->y = y;
 
-    viewVec[12] = -x;
-    viewVec[13] = -y;
+    pos.x = x;
+    pos.y = y;
+
+    viewMat.m30 = -x; // TODO: why negative?
+    viewMat.m31 = -y;
 }
 // =============================================================================
 // Update View Matrix
 // =============================================================================
 void Camera::moveView(float x, float y, float z) {
-    this->x = x;
-    this->y = y;
-    this->z = z;
 
-    viewVec[12] = -x;
-    viewVec[13] = -y;
-    viewVec[14] = -z;
+    pos.x = x;
+    pos.y = y;
+    pos.z = z;
+
+    viewMat.m30 = -x; // TODO: why negative?
+    viewMat.m31 = -y;
+    viewMat.m32 = -z;
 }
 
 #endif // CAMERA_H
