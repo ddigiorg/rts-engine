@@ -1,9 +1,11 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+// thrid party includes
 #include <GL/glew.h>
 #include <SDL.h>
 
+// STL includes
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -14,19 +16,38 @@
 // =============================================================================
 class Shader {
     public:
-        void init(std::string vsFilename, std::string fsFilename);
-        void _loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename);
+        Shader() {};
+        Shader(std::string vsFilename, std::string fsFilename);
+        GLuint getProgram() { return program; }; // TODO: should be reference?
 
-    public:
-        GLuint program;
-        GLuint vertexShader;
-        GLuint fragmentShader;
+    private:
+        void loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename);
+
+        GLuint program = 0;
+        GLuint vertexShader = 0;
+        GLuint fragmentShader = 0;
 };
+
+// =============================================================================
+// Construct Shader
+// =============================================================================
+Shader::Shader(std::string vsFilename, std::string fsFilename) {
+
+    program = glCreateProgram();
+
+    loadGLSLFromFile(vertexShader, GL_VERTEX_SHADER, vsFilename);
+    loadGLSLFromFile(fragmentShader, GL_FRAGMENT_SHADER, fsFilename);
+
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
+    glLinkProgram(program);
+    glValidateProgram(program);
+}
 
 // =============================================================================
 // Load GLSL From File
 // =============================================================================
-void Shader::_loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename) {
+void Shader::loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename) {
 
     // ensure shader type is correct
     std::string typeString = "";
@@ -74,22 +95,6 @@ void Shader::_loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename
         glDeleteShader(shader);
         exit(1);
     }
-}
-
-// =============================================================================
-// Construct Shader
-// =============================================================================
-void Shader::init(std::string vsFilename, std::string fsFilename) {
-
-    program = glCreateProgram();
-
-    _loadGLSLFromFile(vertexShader, GL_VERTEX_SHADER, vsFilename);
-    _loadGLSLFromFile(fragmentShader, GL_FRAGMENT_SHADER, fsFilename);
-
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
-    glValidateProgram(program);
 }
 
 #endif // SHADER_H

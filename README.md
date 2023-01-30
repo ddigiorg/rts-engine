@@ -12,6 +12,7 @@ A SDL2/OpenGL engine and RTS game I am making for fun.  The goal is to build an 
 - [CMake](https://cmake.org/)
 - [OpenGL](https://www.opengl.org/)
 - [SDL2](https://www.libsdl.org/)
+- [SDL2 TTF](https://wiki.libsdl.org/SDL_ttf/FrontPage)
 - [GLEW](https://glew.sourceforge.net/)
 - [STB](https://github.com/nothings/stb)
 
@@ -26,7 +27,7 @@ git pull
 cd
 ```
 
-Create a `3rdparty/` directory:
+Create a `3rdparty/` directory.
 
 ```
 mkdir 3rdparty
@@ -34,15 +35,15 @@ mkdir 3rdparty
 
 **Install CMake**
 
-Navigate to <https://cmake.org/download/> and download the `Windows x64 Installer`
+Navigate to <https://cmake.org/download/> and download the `Windows x64 Installer`.
 
-Run it to install CMake
+Run it to install CMake.
 
 **Install MSVC and OpenGL**
 
-Download [MSVC Community](https://visualstudio.microsoft.com/vs/community/)
+Download [MSVC Community](https://visualstudio.microsoft.com/vs/community/).
 
-During the installation process under the `Workloads` tab be sure to select `Game development with C++`
+During the installation process under the `Workloads` tab be sure to select `Game development with C++`.
 
 Modify OpenGL path variables in `CMakeLists.txt`, e.g.
 
@@ -54,7 +55,7 @@ set(OPENGL_LIBRARY_DIR "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22000.0/
 
 **Install SDL2**
 
-In a terminal use these commands
+In a terminal use these commands.
 
 ```
 cd 3rdparty
@@ -81,13 +82,27 @@ set(SDL2_INCLUDE_DIR "D:/_projects/rts-engine/3rdparty/SDL/build/include")
 set(SDL2_LIBRARY_DIR "D:/_projects/rts-engine/3rdparty/SDL/build/Release")
 ```
 
+**Install SDL2 TTF**
+
+Download the [SDL2 TTF Developer Release](https://github.com/libsdl-org/SDL_ttf/releases/tag/release-2.20.1).
+
+Unzip the file and copy the contents to `3rdparty/SDL2_ttf`
+
+Modify SDL TTF path variables in `CMakeLists.txt`, e.g.
+
+```
+# setup SDL TTF paths
+set(SDL2_TTF_INCLUDE_DIR "D:/_projects/rts-engine/3rdparty/SDL2_ttf/include")
+set(SDL2_TTF_LIBRARY_DIR "D:/_projects/rts-engine/3rdparty/SDL2_ttf/lib/x64")
+```
+
 **Install GLEW**
 
-Download the [GLEW Windows 32-bit and 64bit binaries](https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0-win32.zip/download)
+Download the [GLEW Windows 32-bit and 64bit binaries](https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0-win32.zip/download).
 
 Create a `GLEW/` directory in `3rdparty`
 
-Copy the contents of `glew-2.2.0-win32.zip` to that newly created `GLEW` directory
+Copy the contents of `glew-2.2.0-win32.zip` to that newly created `GLEW` directory.
 
 Modify GLEW path variables in `CMakeLists.txt`, e.g.
 

@@ -1,15 +1,19 @@
 #ifndef CHUNK_MANAGER_H
 #define CHUNK_MANAGER_H
 
+// local includes
 #include "types.h"
 #include "chunk.h"
 
+// third party includes
+
+// STL includes
 #include <unordered_map>
 #include <iostream>
 #include <vector>
 
 // =============================================================================
-// Chunk Class
+// Chunk Manager Class
 // =============================================================================
 class ChunkManager {
     public:
@@ -22,7 +26,6 @@ class ChunkManager {
     private:
         size_t hash(const int& a, const int& b);
     
-    private:
         int radiusX;
         int radiusY;
         vec2i_t chunkPosPrev;
@@ -30,27 +33,12 @@ class ChunkManager {
 };
 
 // =============================================================================
-// Construct ChunkManager
+// Construct Chunk Manager
 // =============================================================================
 ChunkManager::ChunkManager() {
 
     radiusX = 1;
     radiusY = 1;
-
-    // TODO: need to set chunkPosPrev from camera instead
-    // update(cameraPos);
-    // loop through chunk activation area
-    for (int y = -radiusY; y <= radiusY; y++) {
-        for (int x = -radiusX; x <= radiusX; x++) {
-            size_t h = hash(x, y);
-
-            // setup new chunks
-            chunks[h] = Chunk();
-            chunks[h].updatePosition(x, y);
-            chunks[h].updateTiles();
-            chunks[h].bufferData();
-        }
-    }
 }
 
 // =============================================================================
@@ -111,8 +99,6 @@ void ChunkManager::update(vec3f_t cameraPos) {
     }
 
     chunkPosPrev = chunkPos;
-
-    std::cout << chunks.size() << std::endl;
 }
 
 // =============================================================================

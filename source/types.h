@@ -1,6 +1,10 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+// third party includes
+#include <GL/glew.h>
+
+// type definitions
 typedef union vec2i_u {
     GLint raw[2];
     struct {

@@ -1,11 +1,14 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+// Local includes
 #include "types.h"
 
+// third party includes
 #include <GL/glew.h>
 #include <SDL.h>
 
+// STL includes
 #include <vector>
 
 // =============================================================================
@@ -13,7 +16,7 @@
 // =============================================================================
 class Camera {
     public:
-        Camera();
+        Camera() {};
         void initOrthographic(int width, int height);
         void initPerspective(int width, int height);
         void initView(float x, float y, float z);
@@ -26,13 +29,6 @@ class Camera {
         mat4x4f_t projMat;
         mat4x4f_t viewMat;
 };
-
-// =============================================================================
-// Construct Camera
-// =============================================================================
-Camera::Camera() {
-
-}
 
 // =============================================================================
 // Initialize Orthographic Projection Matrix

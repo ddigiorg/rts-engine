@@ -6,6 +6,10 @@ set(SDL2_INCLUDE_DIR "D:/_projects/rts-engine/3rdparty/SDL/build/include")
 set(SDL2_INCLUDE_CONFIG_DIR "D:/_projects/rts-engine/3rdparty/SDL/build/include-config-release")
 set(SDL2_LIBRARY_DIR "D:/_projects/rts-engine/3rdparty/SDL/build/Release")
 
+# setup SDL TTF paths
+set(SDL2_TTF_INCLUDE_DIR "D:/_projects/rts-engine/3rdparty/SDL2_ttf/include")
+set(SDL2_TTF_LIBRARY_DIR "D:/_projects/rts-engine/3rdparty/SDL2_ttf/lib/x64")
+
 # setup GLEW paths
 set(GLEW_INCLUDE_DIR "D:/_projects/rts-engine/3rdparty/GLEW/include")
 set(GLEW_LIBRARY_DIR "D:/_projects/rts-engine/3rdparty/GLEW/lib/Release/x64")
@@ -20,6 +24,7 @@ set(STB_INCLUDE_DIR "D:/_projects/rts-engine/3rdparty/stb/")
 include_directories(
     ${SDL2_INCLUDE_DIR}
     ${SDL2_INCLUDE_CONFIG_DIR}
+    ${SDL2_TTF_INCLUDE_DIR}
     ${GLEW_INCLUDE_DIR}
     ${OPENGL_INCLUDE_DIR}
     ${STB_INCLUDE_DIR}
@@ -34,6 +39,7 @@ target_link_libraries(
     rts-engine
     ${SDL2_LIBRARY_DIR}/SDL2.lib
     ${SDL2_LIBRARY_DIR}/SDL2main.lib
+    ${SDL2_TTF_LIBRARY_DIR}/SDL2_ttf.lib
     ${GLEW_LIBRARY_DIR}/glew32.lib
     ${OPENGL_LIBRARY_DIR}/OpenGL32.lib
 )

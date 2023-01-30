@@ -1,37 +1,46 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
+// local includes
 #include "types.h"
 #include "shader.h"
 #include "camera.h"
 
+/// third party includes
 #include <GL/glew.h>
 #include <SDL.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
+// STL includes
 #include <iostream>
 #include <cstdint>
 #include <string>
 
-#define VERTEX_SIZE 4 // XYUV
-
+// definitions
+#define TILE_VERTEX_SIZE 4 // xyuv
 #define TILE_PIXELS_X 32
 #define TILE_PIXELS_Y 32
 #define TILE_VERTICIES 6
-#define TILE_BUFFER_SIZE (TILE_VERTICIES * VERTEX_SIZE)
+#define TILE_BUFFER_SIZE (TILE_VERTICIES * TILE_VERTEX_SIZE)
 
-#define CHUNK_TILES_X 16
-#define CHUNK_TILES_Y 16
+#define CHUNK_TILES_X 32
+#define CHUNK_TILES_Y 32
 #define CHUNK_PIXELS_X (CHUNK_TILES_X * TILE_PIXELS_X)
 #define CHUNK_PIXELS_Y (CHUNK_TILES_Y * TILE_PIXELS_Y)
 #define CHUNK_PIXELS_HALF_X (CHUNK_PIXELS_X / 2)
 #define CHUNK_PIXELS_HALF_Y (CHUNK_PIXELS_Y / 2)
 #define CHUNK_BUFFER_SIZE (TILE_BUFFER_SIZE * CHUNK_TILES_X * CHUNK_TILES_X)
+#define CHUNK_VERT_SHADER_FILEPATH "D:/_projects/rts-engine/resources/shaders/chunk_vert.glsl"
+#define CHUNK_FRAG_SHADER_FILEPATH "D:/_projects/rts-engine/resources/shaders/chunk_frag.glsl"
 
 #define ATLAS_COUNT_U 8
 #define ATLAS_COUNT_V 8
 #define ATLAS_STEP_U (1.0f / float(ATLAS_COUNT_U))
 #define ATLAS_STEP_V (1.0f / float(ATLAS_COUNT_V))
+#define CHUNK_ATLAS_FILEPATH "D:/_projects/rts-engine/resources/images/terrain16.png"
 
+// type definitions
 typedef std::uint8_t TileArray2D [CHUNK_TILES_Y][CHUNK_TILES_Y];
 
 // =============================================================================
@@ -40,69 +49,87 @@ typedef std::uint8_t TileArray2D [CHUNK_TILES_Y][CHUNK_TILES_Y];
 class Chunk {
     public:
         Chunk();
-        //~Chunk();
+        ~Chunk();
         void loadData(TileArray2D& tiles);
         void updatePosition(int x, int y);
         void updateTiles();
         void bufferData();
         void render(Camera& camera);
-
         vec2i_t getPosition() { return pos; };
 
-    public:
         bool active = false;
-    
+
     private:
+        static bool isStaticInitialized;
+        static Shader shader;
+        static GLuint atlasTextureId;
+
         vec2i_t pos;
         GLuint vaoId = 0;
         GLuint vboId = 0;
-        Shader shader;
-
         TileArray2D data;
         GLfloat vertexArr[CHUNK_BUFFER_SIZE];
 };
+
+// =============================================================================
+// Chunk Static Definitions
+// =============================================================================
+bool Chunk::isStaticInitialized = false;
+Shader Chunk::shader = Shader();
+GLuint Chunk::atlasTextureId = 0;
 
 // =============================================================================
 // Construct Chunk
 // =============================================================================
 Chunk::Chunk() {
 
-    TileArray2D temp = {
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    };
-
     // reset tile data
     for (int y = 0; y < CHUNK_TILES_X; y++) {
         for (int x = 0; x < CHUNK_TILES_X; x++) {
-            // data[y][x] = 0;
-            data[y][x] = temp[y][x];
+            data[y][x] = 0;
+
+            // TODO: temporary for drawing chunk border
+            if (x == CHUNK_TILES_X - 1 || y == CHUNK_TILES_Y - 1) {
+                data[y][x] = 1;
+            }
         }
     }
 
-    // setup opengl objects
+    // setup OpenGL objects
     glGenVertexArrays(1, &vaoId);
     glGenBuffers(1, &vboId);
 
-    // setup opengl shaders
-    shader.init(
-        std::string("D:/_projects/rts-engine/resources/shaders/chunk_vert.glsl"),
-        std::string("D:/_projects/rts-engine/resources/shaders/chunk_frag.glsl")
-    );
+    // static runtime definitions: required becase OpenGL needs to be
+    // initialized before these members can be setup
+    if (!isStaticInitialized) {
+
+        // setup shader
+        shader = Shader(
+            std::string(CHUNK_VERT_SHADER_FILEPATH),
+            std::string(CHUNK_FRAG_SHADER_FILEPATH)
+        );
+
+        // setup texture atlas
+        int tX, tY, tC;
+        GLubyte* pixels = stbi_load(CHUNK_ATLAS_FILEPATH, &tX, &tY, &tC, 0);
+        glGenTextures(1, &atlasTextureId);
+        glBindTexture(GL_TEXTURE_2D, atlasTextureId);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tX, tY, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        stbi_image_free(pixels);
+
+        isStaticInitialized = true;
+    }
+}
+
+// =============================================================================
+// Deconstruct Chunk
+// =============================================================================
+Chunk::~Chunk() {
+    glDeleteBuffers(1, &vboId);
+    // glDeleteVertexArrays(1, &vaoId); // TODO: understand why this doesnt work
 }
 
 // =============================================================================
@@ -193,13 +220,18 @@ void Chunk::updateTiles(){
 // =============================================================================
 void Chunk::bufferData() {
 
+    // bind OpenGL objects
     glBindVertexArray(vaoId);
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
-    glBufferData(GL_ARRAY_BUFFER, CHUNK_BUFFER_SIZE * sizeof(GLfloat), &vertexArr, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, VERTEX_SIZE * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, VERTEX_SIZE * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
+
+    // send vertex buffer data to GPU
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, TILE_VERTEX_SIZE * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, TILE_VERTEX_SIZE * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
+    glBufferData(GL_ARRAY_BUFFER, CHUNK_BUFFER_SIZE * sizeof(GLfloat), &vertexArr, GL_STATIC_DRAW);
+
+    // unbind OpenGL objects
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     glDisableVertexAttribArray(0);
@@ -211,17 +243,26 @@ void Chunk::bufferData() {
 // =============================================================================
 void Chunk::render(Camera& camera) {
 
-    glUseProgram(shader.program);
-    GLint projLocation = glGetUniformLocation(shader.program, "projection");
-    glUniformMatrix4fv(projLocation, 1, GL_FALSE, &camera.projMat.flat[0]);
-    GLint viewLocation = glGetUniformLocation(shader.program, "view");
-    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &camera.viewMat.flat[0]);
+    GLuint program = shader.getProgram();
+    GLint projLocation = glGetUniformLocation(program, "projection");
+    GLint viewLocation = glGetUniformLocation(program, "view");
+
+    // bind OpenGL objects
+    glUseProgram(program);
     glBindVertexArray(vaoId);
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
+    glBindTexture(GL_TEXTURE_2D, atlasTextureId);
+
+    // render
+    glUniformMatrix4fv(projLocation, 1, GL_FALSE, &camera.projMat.flat[0]);
+    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &camera.viewMat.flat[0]);
     glDrawArrays(GL_TRIANGLES, 0, CHUNK_BUFFER_SIZE);
-    glBindBuffer(GL_ARRAY_BUFFER, 0); // TODO: needed?
-    glBindVertexArray(0); // TODO: needed?
+
+    // unbind OpenGL objects (TODO: is this needed?)
     glUseProgram(0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 #endif // CHUNK_H
