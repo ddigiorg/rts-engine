@@ -84,6 +84,8 @@ set(SDL2_LIBRARY_DIR "D:/_projects/rts-engine/3rdparty/SDL/build/Release")
 
 **Install SDL2 TTF**
 
+TODO: might not be needed
+
 Download the [SDL2 TTF Developer Release](https://github.com/libsdl-org/SDL_ttf/releases/tag/release-2.20.1).
 
 Unzip the file and copy the contents to `3rdparty/SDL2_ttf`
@@ -126,6 +128,30 @@ Modify STB path variables in `CMakeLists.txt`, e.g.
 ```
 # setup STB paths
 set(STB_INCLUDE_DIR "D:/_projects/rts-engine/3rdparty/stb/")
+```
+
+**Install FastNoiseLite**
+
+```
+cd 3rdparty
+git clone https://github.com/Auburn/FastNoiseLite.git
+```
+
+Modify FastNoiseLite path variables in `CMakeLists.txt`, e.g.
+
+```
+# setup FastNoiseLite paths
+set(FNL_INCLUDE_DIR "D:/_projects/rts-engine/3rdparty/FastNoiseLite/Cpp")
+```
+
+**Install FreeType2**
+
+```
+cd 3rdparty
+git clone https://github.com/freetype/freetype.git
+cd freetype
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
 ```
 
 ## Usage

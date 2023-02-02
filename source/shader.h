@@ -17,80 +17,99 @@
 class Shader {
     public:
         Shader() {};
-        Shader(std::string vsFilename, std::string fsFilename);
-        GLuint getProgram() { return program; }; // TODO: should be reference?
+
+        Shader(
+            std::string vertFilepath,
+            std::string fragFilepath);
+
+        Shader(
+            std::string vertFilepath,
+            std::string geomFilepath,
+            std::string fragFilepath);
+
+        GLuint getProgId() { return progId; }; // TODO: should be reference?
 
     private:
-        void loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename);
+        void loadGLSLFromFile(std::string filepath, GLuint& shader, GLuint type);
 
-        GLuint program = 0;
-        GLuint vertexShader = 0;
-        GLuint fragmentShader = 0;
+        GLuint progId = 0;
+        GLuint vertShader = NULL;
+        GLuint geomShader = NULL;
+        GLuint fragShader = NULL;
 };
 
 // =============================================================================
 // Construct Shader
 // =============================================================================
-Shader::Shader(std::string vsFilename, std::string fsFilename) {
+Shader::Shader(
+        std::string vertFilepath,
+        std::string fragFilepath) {
 
-    program = glCreateProgram();
+    progId = glCreateProgram();
+    loadGLSLFromFile(vertFilepath, vertShader, GL_VERTEX_SHADER);
+    loadGLSLFromFile(fragFilepath, fragShader, GL_FRAGMENT_SHADER);
+    glAttachShader(progId, vertShader);
+    glAttachShader(progId, fragShader);
+    glLinkProgram(progId);
+    glValidateProgram(progId);
+}
 
-    loadGLSLFromFile(vertexShader, GL_VERTEX_SHADER, vsFilename);
-    loadGLSLFromFile(fragmentShader, GL_FRAGMENT_SHADER, fsFilename);
+// =============================================================================
+// Construct Shader
+// =============================================================================
+Shader::Shader(
+        std::string vertFilepath,
+        std::string geomFilepath,
+        std::string fragFilepath) {
 
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
-    glValidateProgram(program);
+    progId = glCreateProgram();
+    loadGLSLFromFile(vertFilepath, vertShader, GL_VERTEX_SHADER);
+    loadGLSLFromFile(geomFilepath, geomShader, GL_GEOMETRY_SHADER);
+    loadGLSLFromFile(fragFilepath, fragShader, GL_FRAGMENT_SHADER);
+    glAttachShader(progId, vertShader);
+    glAttachShader(progId, geomShader);
+    glAttachShader(progId, fragShader);
+    glLinkProgram(progId);
+    glValidateProgram(progId);
 }
 
 // =============================================================================
 // Load GLSL From File
 // =============================================================================
-void Shader::loadGLSLFromFile(GLuint& shader, GLuint type, std::string filename) {
-
-    // ensure shader type is correct
-    std::string typeString = "";
-    if(type == GL_VERTEX_SHADER) {
-        typeString = "GL_VERTEX_SHADER";
-    }
-    else if(type == GL_FRAGMENT_SHADER) {
-        typeString = "GL_FRAGMENT_SHADER";
-    }
-    else {
-        std::cout << "ERROR: Shader type must be either:" << std::endl
-                  << "- GL_VERTEX_SHADER" << std::endl
-                  << "- GL_FRAGMENT_SHADER" << std::endl;
-        exit(1);
-    }
+void Shader::loadGLSLFromFile(std::string filepath, GLuint& shader, GLuint type) {
 
     // read shader source from file
-    std::string shaderSource = "";
     std::string line = "";
-    std::ifstream file(filename.c_str());
+    std::string source = "";
+    std::ifstream file(filepath.c_str());
+
     if(file.is_open()) {
         while(std::getline(file, line)) {
-            shaderSource += line + "\n";
+            source += line + "\n";
         }
         file.close();
     }
 
     // load and compile shader
     shader = glCreateShader(type);
-    const char* src = shaderSource.c_str();
+    const char* src = source.c_str();
     glShaderSource(shader, 1, &src, nullptr);
     glCompileShader(shader);
 
     // error check shader
     GLint result;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
+
     if(result == GL_FALSE) {
         int length;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
         char* errorMessages = new char[length];
         glGetShaderInfoLog(shader, length, &length, errorMessages);
-        std::cout << "ERROR: " << typeString << " compilation failed." << std::endl
+
+        std::cout << "ERROR: shader compilation failed." << std::endl
+                  << filepath << std::endl
                   << errorMessages << std::endl;
+
         delete[] errorMessages;
         glDeleteShader(shader);
         exit(1);

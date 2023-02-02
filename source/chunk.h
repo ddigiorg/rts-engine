@@ -5,12 +5,12 @@
 #include "types.h"
 #include "shader.h"
 #include "camera.h"
+#include "chunk_atlas.h"
 
 /// third party includes
 #include <GL/glew.h>
 #include <SDL.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "FastNoiseLite.h"
 
 // STL includes
 #include <iostream>
@@ -19,8 +19,8 @@
 
 // definitions
 #define TILE_VERTEX_SIZE 4 // xyuv
-#define TILE_PIXELS_X 32
-#define TILE_PIXELS_Y 32
+#define TILE_PIXELS_X 16
+#define TILE_PIXELS_Y 16
 #define TILE_VERTICIES 6
 #define TILE_BUFFER_SIZE (TILE_VERTICIES * TILE_VERTEX_SIZE)
 
@@ -33,12 +33,6 @@
 #define CHUNK_BUFFER_SIZE (TILE_BUFFER_SIZE * CHUNK_TILES_X * CHUNK_TILES_X)
 #define CHUNK_VERT_SHADER_FILEPATH "D:/_projects/rts-engine/resources/shaders/chunk_vert.glsl"
 #define CHUNK_FRAG_SHADER_FILEPATH "D:/_projects/rts-engine/resources/shaders/chunk_frag.glsl"
-
-#define ATLAS_COUNT_U 8
-#define ATLAS_COUNT_V 8
-#define ATLAS_STEP_U (1.0f / float(ATLAS_COUNT_U))
-#define ATLAS_STEP_V (1.0f / float(ATLAS_COUNT_V))
-#define CHUNK_ATLAS_FILEPATH "D:/_projects/rts-engine/resources/images/terrain16.png"
 
 // type definitions
 typedef std::uint8_t TileArray2D [CHUNK_TILES_Y][CHUNK_TILES_Y];
@@ -62,7 +56,7 @@ class Chunk {
     private:
         static bool isStaticInitialized;
         static Shader shader;
-        static GLuint atlasTextureId;
+        static ChunkAtlas atlas;
 
         vec2i_t pos;
         GLuint vaoId = 0;
@@ -76,7 +70,7 @@ class Chunk {
 // =============================================================================
 bool Chunk::isStaticInitialized = false;
 Shader Chunk::shader = Shader();
-GLuint Chunk::atlasTextureId = 0;
+ChunkAtlas Chunk::atlas = ChunkAtlas();
 
 // =============================================================================
 // Construct Chunk
@@ -109,16 +103,8 @@ Chunk::Chunk() {
             std::string(CHUNK_FRAG_SHADER_FILEPATH)
         );
 
-        // setup texture atlas
-        int tX, tY, tC;
-        GLubyte* pixels = stbi_load(CHUNK_ATLAS_FILEPATH, &tX, &tY, &tC, 0);
-        glGenTextures(1, &atlasTextureId);
-        glBindTexture(GL_TEXTURE_2D, atlasTextureId);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tX, tY, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        stbi_image_free(pixels);
+        // initialize texture atlas
+        atlas.init();
 
         isStaticInitialized = true;
     }
@@ -188,29 +174,45 @@ void Chunk::updatePosition(int x, int y) {
 // =============================================================================
 void Chunk::updateTiles(){
 
+    int numTilesU = atlas.getNumTilesU();
+    float stepU = atlas.getStepU();
+    float stepV = atlas.getStepV();
+
+    /// // update noise
+    // int seed = 0;
+    // FastNoiseLite noise(seed);
+    // ///noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+    // noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+
     // loop through each tile
     for (int y = 0; y < CHUNK_TILES_X; y++) {
         for (int x = 0; x < CHUNK_TILES_X; x++){
 
+            // // update noise
+            // float nx = x + pos.x * CHUNK_TILES_X;
+            // float ny = y + pos.y * CHUNK_TILES_Y;
+            // float noiseData = noise.GetNoise(nx, ny);
+            // data[y][x] = noiseData > 0.5 ? 1 : 0;
+
             // calculate tile's texture atlas coordinates
-            float offsetU = (data[y][x] % ATLAS_COUNT_U) * ATLAS_STEP_U;
-            float offsetV = (data[y][x] / ATLAS_COUNT_V) * ATLAS_STEP_V;
+            float offsetU = (data[y][x] % numTilesU) * stepU;
+            float offsetV = (data[y][x] / numTilesU) * stepV;
 
             // calculate tile's vertex vector offsets
             int v = (y * CHUNK_TILES_X + x) * TILE_BUFFER_SIZE;
 
-            vertexArr[v+ 2] = GLfloat(0 * ATLAS_STEP_U + offsetU); // u00;
-            vertexArr[v+ 3] = GLfloat(0 * ATLAS_STEP_V + offsetV); // v00;
-            vertexArr[v+ 6] = GLfloat(1 * ATLAS_STEP_U + offsetU); // u10;
-            vertexArr[v+ 7] = GLfloat(0 * ATLAS_STEP_V + offsetV); // v10;
-            vertexArr[v+10] = GLfloat(1 * ATLAS_STEP_U + offsetU); // u11;
-            vertexArr[v+11] = GLfloat(1 * ATLAS_STEP_V + offsetV); // v11;
-            vertexArr[v+14] = GLfloat(0 * ATLAS_STEP_U + offsetU); // u00;
-            vertexArr[v+15] = GLfloat(0 * ATLAS_STEP_V + offsetV); // v00;
-            vertexArr[v+18] = GLfloat(0 * ATLAS_STEP_U + offsetU); // u01;
-            vertexArr[v+19] = GLfloat(1 * ATLAS_STEP_V + offsetV); // v01;
-            vertexArr[v+22] = GLfloat(1 * ATLAS_STEP_U + offsetU); // u11;
-            vertexArr[v+23] = GLfloat(1 * ATLAS_STEP_V + offsetV); // v11;
+            vertexArr[v+ 2] = GLfloat(0 * stepU + offsetU); // u00;
+            vertexArr[v+ 3] = GLfloat(0 * stepV + offsetV); // v00;
+            vertexArr[v+ 6] = GLfloat(1 * stepU + offsetU); // u10;
+            vertexArr[v+ 7] = GLfloat(0 * stepV + offsetV); // v10;
+            vertexArr[v+10] = GLfloat(1 * stepU + offsetU); // u11;
+            vertexArr[v+11] = GLfloat(1 * stepV + offsetV); // v11;
+            vertexArr[v+14] = GLfloat(0 * stepU + offsetU); // u00;
+            vertexArr[v+15] = GLfloat(0 * stepV + offsetV); // v00;
+            vertexArr[v+18] = GLfloat(0 * stepU + offsetU); // u01;
+            vertexArr[v+19] = GLfloat(1 * stepV + offsetV); // v01;
+            vertexArr[v+22] = GLfloat(1 * stepU + offsetU); // u11;
+            vertexArr[v+23] = GLfloat(1 * stepV + offsetV); // v11;
         }
     }
 }
@@ -243,7 +245,7 @@ void Chunk::bufferData() {
 // =============================================================================
 void Chunk::render(Camera& camera) {
 
-    GLuint program = shader.getProgram();
+    GLuint program = shader.getProgId();
     GLint projLocation = glGetUniformLocation(program, "projection");
     GLint viewLocation = glGetUniformLocation(program, "view");
 
@@ -251,7 +253,7 @@ void Chunk::render(Camera& camera) {
     glUseProgram(program);
     glBindVertexArray(vaoId);
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
-    glBindTexture(GL_TEXTURE_2D, atlasTextureId);
+    glBindTexture(GL_TEXTURE_2D, atlas.getTextureId());
 
     // render
     glUniformMatrix4fv(projLocation, 1, GL_FALSE, &camera.projMat.flat[0]);

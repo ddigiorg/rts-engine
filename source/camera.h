@@ -10,6 +10,7 @@
 
 // STL includes
 #include <vector>
+#include <iostream>
 
 // =============================================================================
 // Camera Class
@@ -22,8 +23,10 @@ class Camera {
         void initView(float x, float y, float z);
         void moveView(float x, float y);
         void moveView(float x, float y, float z);
+        void zoomView(const float zoom);
 
     public:
+        float zoom;
         vec3f_t pos;
         vec2i_t resolution;
         mat4x4f_t projMat;
@@ -110,13 +113,14 @@ void Camera::initView(float x, float y, float z) {
     pos.x = x;
     pos.y = y;
     pos.z = z;
+    zoom = 1.0f;
 
-    viewMat.m00 = 1.0f; // scale x
+    viewMat.m00 = zoom; // scale x
     viewMat.m01 = 0.0f;
     viewMat.m02 = 0.0f;
     viewMat.m03 = 0.0f;
     viewMat.m10 = 0.0f;
-    viewMat.m11 = 1.0f; // scale y
+    viewMat.m11 = zoom; // scale y
     viewMat.m12 = 0.0f;
     viewMat.m13 = 0.0f;
     viewMat.m20 = 0.0f;
@@ -130,7 +134,7 @@ void Camera::initView(float x, float y, float z) {
 }
 
 // =============================================================================
-// Update View Matrix
+// Move View Matrix
 // =============================================================================
 void Camera::moveView(float x, float y) {
 
@@ -140,8 +144,9 @@ void Camera::moveView(float x, float y) {
     viewMat.m30 = -x; // TODO: why negative?
     viewMat.m31 = -y;
 }
+
 // =============================================================================
-// Update View Matrix
+// Move View Matrix
 // =============================================================================
 void Camera::moveView(float x, float y, float z) {
 
@@ -154,4 +159,25 @@ void Camera::moveView(float x, float y, float z) {
     viewMat.m32 = -z;
 }
 
+// =============================================================================
+// Zoom View Matrix
+// =============================================================================
+void Camera::zoomView(const float zoom) {
+
+    if (zoom < 0.1f) {
+        this->zoom = 0.1f;
+    }
+    else if (zoom > 2.0f) {
+        this->zoom = 2.0f;
+    }
+    else {
+        this->zoom = zoom;
+    }
+
+    viewMat.m00 = this->zoom;
+    viewMat.m11 = this->zoom;
+}
+
 #endif // CAMERA_H
+
+// generate c++ code to render a triangle in opengl

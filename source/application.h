@@ -5,6 +5,7 @@
 #include "types.h"
 #include "camera.h"
 #include "chunk_manager.h"
+// #include "debug_screen.h"
 
 // third party includes
 #include <GL/glew.h>
@@ -43,6 +44,7 @@ class Application {
 
         Camera camera;
         ChunkManager chunkManager;
+        // DebugScreen debugScreen;
 };
 
 // =============================================================================
@@ -111,10 +113,15 @@ Application::Application() {
 
     // setup camera
     camera.initOrthographic(screenX, screenY);
-    camera.initView(0.0, 0.0, 0.0);
+    camera.initView(0.0f, 0.0f, 0.0f);
+    // camera.initPerspective(screenX, screenY);
+    // camera.initView(0.0, 0.0, -0.0001);
 
     // setup chunk manager
     chunkManager.update({0.0, 0.0, 0.0});
+
+    // // setup debug screen
+    // debugScreen.init();
 }
 
 // =============================================================================
@@ -136,12 +143,22 @@ void Application::handleInputEvents() {
     while(SDL_PollEvent(&event)) {
 
         // handle mouse down event
-        if(event.type == SDL_MOUSEBUTTONDOWN) {
+        if (event.type == SDL_MOUSEBUTTONDOWN) {
             SDL_GetMouseState(&mouseX, &mouseY);
         }
 
+        // handle mouse wheel event
+        if (event.type == SDL_MOUSEWHEEL) {
+            if (event.wheel.y > 0) {
+                camera.zoomView(camera.zoom + 0.1f);
+            }
+            else if (event.wheel.y < 0) {
+                camera.zoomView(camera.zoom - 0.1f);
+            }
+        }
+
         // handle key down event
-        if(event.type == SDL_KEYDOWN) {
+        if (event.type == SDL_KEYDOWN) {
             switch(event.key.keysym.sym){
                 case SDLK_ESCAPE: {
                     isRunning = false;
@@ -167,7 +184,7 @@ void Application::handleInputEvents() {
         }
 
         // handle key up event
-        if(event.type == SDL_KEYUP) {
+        if (event.type == SDL_KEYUP) {
             switch(event.key.keysym.sym){
                 case SDLK_UP: {
                     if(cameraVelY < 0.0f)
@@ -193,7 +210,7 @@ void Application::handleInputEvents() {
         }
 
         // handle quit event
-        if(event.type == SDL_QUIT) {
+        if (event.type == SDL_QUIT) {
             isRunning = false;
         }
     }
